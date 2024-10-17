@@ -1,6 +1,34 @@
 function submitLogin() {
     const username = document.getElementById('username').value;
     const password = document.getElementById('password').value;
+    const role = document.getElementById('role').value;
+    const messageElement = document.getElementById('message');
+
+    messageElement.style.color = 'red';
+
+    if (!username && !password && !role) {
+        messageElement.innerHTML = 'Please enter your username, password and select your role.';
+        return;
+    } else if (!username && !password) {
+        messageElement.innerHTML = 'Please enter your username and password.';
+        return;
+    }else if (!password && !role) {
+        messageElement.innerHTML = 'Please enter your password and select your role.';
+        return;
+    } else if (!username && !role) {
+        messageElement.innerHTML = 'Please enter your username and select your role.';
+        return;
+    } else if (!password) {
+        messageElement.innerHTML = 'Please enter your password.';
+        return;
+    } else if (!role) {
+        messageElement.innerHTML = 'Please select your role.';
+        return;
+    }else if (!username) {
+        messageElement.innerHTML = 'Please enter your username.';
+        return;
+    }
+    
     const loginData = {};
     loginData.UserName = username;
     loginData.PassWord = password;
@@ -15,6 +43,7 @@ function submitLogin() {
     })
     .then(response => response.json())
     .then(data => {
+        messageElement.style.color = 'black';
         const resultDiv = document.getElementById('message');
         resultDiv.innerHTML = `
             <p><strong>Status :</strong> ${data.status ? 'Success' : 'Failed'}</p>
