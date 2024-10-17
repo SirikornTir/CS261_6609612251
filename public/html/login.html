@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <link rel="stylesheet" href="/public/css/styles.css">
+</head>
+<body>
+    <div class="login-container">
+        <h1>Login</h1>
+        <form id="loginForm">
+            <label for="username">Username</label>
+            <input type="text" id="username" placeholder="Enter your username" required>
+            <label for="password">Password</label>
+            <input type="password" id="password" placeholder="Enter your password" required>
+            <select id="role">
+                <option value="">Select your role</option>
+                <option value="admin">Student</option>
+                <option value="user">Professor</option>
+            </select>
+            <button type="button" onclick="submitLogin()">Login</button>
+            <button class="requestForm" type="button" onclick="requestForm()">Request Form</button>
+            <p id="message"></p>
+        </form>
+    </div>
+</body>
+<script src="../js/script.js"></script>
+</html>
