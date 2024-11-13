@@ -1,59 +1,123 @@
-function submitLogin() {
-    const username = document.getElementById('username').value;
-    const password = document.getElementById('password').value;
-    const role = document.getElementById('role').value;
-    const messageElement = document.getElementById('message');
+document.addEventListener('DOMContentLoaded', () => {
+    const text = document.getElementById('text');
+    const password = document.getElementById('password');
+    const showPasswordCheckbox = document.getElementById('show-password-checkbox');
+    const submit = document.getElementById('submit');
+    const role = document.getElementById('role');
+    const loginContent = document.getElementById('login-content');
 
-    messageElement.style.color = 'red';
+    // Toggle password visibility
+    // showPasswordCheckbox.addEventListener('change', (event) => {
+    //     password.type = event.target.checked ? 'text' : 'password';
+    // });
 
-    if (!username && !password && !role) {
-        messageElement.innerHTML = 'Please enter your username, password and select your role.';
-        return;
-    } else if (!username && !password) {
-        messageElement.innerHTML = 'Please enter your username and password.';
-        return;
-    }else if (!password && !role) {
-        messageElement.innerHTML = 'Please enter your password and select your role.';
-        return;
-    } else if (!username && !role) {
-        messageElement.innerHTML = 'Please enter your username and select your role.';
-        return;
-    } else if (!password) {
-        messageElement.innerHTML = 'Please enter your password.';
-        return;
-    } else if (!role) {
-        messageElement.innerHTML = 'Please select your role.';
-        return;
-    }else if (!username) {
-        messageElement.innerHTML = 'Please enter your username.';
-        return;
-    }
-    
-    const loginData = {};
-    loginData.UserName = username;
-    loginData.PassWord = password;
-    var jsonData = JSON.stringify(loginData); 
-    fetch('https://restapi.tu.ac.th/api/v1/auth/Ad/verify2', {
-         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Application-Key': 'TUae0d92800007fb4156131f410380b734f802c59072902cb431499ffa6829ed425d9e7aa77debb8197ac7d3e11d1978fb'
-        },
-        body: jsonData,
-    })
-    .then(response => response.json())
-    .then(data => {
-        messageElement.style.color = 'black';
-        const resultDiv = document.getElementById('message');
-        resultDiv.innerHTML = `
-            <p><strong>Status :</strong> ${data.status ? 'Success' : 'Failed'}</p>
-            <p><strong>Name :</strong> ${data.displayname_en || 'N/A'}</p>
-            <p><strong>Username :</strong> ${data.username|| 'N/A'}</p>
-        `;
-    })
-    .catch(error => {
-        console.error('Error fetching data:', error);
-        const resultDiv = document.getElementById('message');
-        resultDiv.innerHTML = '<p>Error fetching data. Please try again.</p>';
+    // Handle Login Submission
+    submit.addEventListener('click', async (event) => {
+        event.preventDefault(); // Prevent page reload
+
+        // Capture values
+        const textValue = text.value;
+        const passwordValue = password.value;
+        const roleValue = role.value;
+
+        if (!roleValue) {
+            alert("You DIDN'T Choose Your Role");
+            return;
+        }
+
+        try {
+            // Login Verification API Call
+            const response = await axios.post('/api/v1/auth/Ad/verify', {
+                UserName: textValue,
+                PassWord: passwordValue,
+            }, {
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            const apiData = response.data;
+
+            if (!apiData.status) {
+                throw new Error(apiData.message);
+            }
+
+            displayUserInfo(apiData.data);
+
+            // Send data to the backend to add student
+            await axios.post("http://localhost:8080/api/students", {
+                enName: apiData.data.displayname_en,
+                email: apiData.data.email,
+                faculty: apiData.data.faculty,
+                type: apiData.data.type,
+                userName: apiData.data.username,
+                password: passwordValue
+            }, {
+                headers: {
+                    'Application': 'application/json',
+                    'Content-Type': 'application/json'
+                }
+            });
+        } catch (error) {
+            console.error('Error:', error.message);
+            alert(`An error occurred: ${error.message}`);
+        }
     });
-}
+
+    const displayUserInfo = (userInfo) => {
+        loginContent.innerHTML = '';
+
+        const success = document.createElement('h1');
+        success.classList.add('success');
+        success.textContent = 'Successfully Logged In';
+        loginContent.appendChild(success);
+
+        const wrapper = document.createElement('div');
+        wrapper.classList.add('wrapper');
+        loginContent.appendChild(wrapper);
+
+        const textElement = document.createElement('h1');
+        textElement.classList.add('Text');
+        textElement.textContent = `Name: ${userInfo.displayname_en}`;
+        wrapper.appendChild(textElement);
+
+        const emailElement = document.createElement('h1');
+        emailElement.classList.add('Text');
+        emailElement.textContent = `Email: ${userInfo.email}`;
+        wrapper.appendChild(emailElement);
+
+        if (userInfo.text) {
+            const stdIDElement = document.createElement('h1');
+            stdIDElement.classList.add('Text');
+            stdIDElement.textContent = `Student ID: ${userInfo.text}`;
+            wrapper.appendChild(stdIDElement);
+        }
+
+        if (userInfo.faculty) {
+            const facultyElement = document.createElement('h1');
+            facultyElement.classList.add('Text');
+            facultyElement.textContent = `Faculty: ${userInfo.faculty}`;
+            wrapper.appendChild(facultyElement);
+        }
+
+        if (userInfo.organization) {
+            const orgElement = document.createElement('h1');
+            orgElement.classList.add('Text');
+            orgElement.textContent = `Organization: ${userInfo.organization}`;
+            wrapper.appendChild(orgElement);
+        }
+
+        const roleElement = document.createElement('h1');
+        roleElement.classList.add('Text');
+        roleElement.textContent = `Your Role: ${userInfo.type}`;
+        wrapper.appendChild(roleElement);
+
+        const backBtn = document.createElement('button');
+        backBtn.classList.add('back');
+        backBtn.textContent = 'Log Out';
+        backBtn.addEventListener('click', () => location.reload());
+        loginContent.appendChild(backBtn);
+    };
+
+    document.querySelectorAll('.login-container').forEach(el => el.style.width = "450px");
+});
